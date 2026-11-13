@@ -25,7 +25,8 @@ class Source:
 def load_sources(path: Path, only_active: bool = True) -> list[Source]:
     """Charge les sources ; l'URL du flux est la première URL de la colonne `acces`."""
     sources = []
-    with path.open(encoding="utf-8", newline="") as f:
+    # utf-8-sig : accepte le BOM ajouté par Excel / LibreOffice
+    with path.open(encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
             if only_active and row.get("actif", "oui").strip().lower() != "oui":
                 continue
