@@ -22,7 +22,7 @@ def test_url_is_extracted_from_acces_column():
     by_name = {s.name: s for s in load_sources(REPO_SOURCES, only_active=False)}
 
     assert by_name["Ouest-France"].url == "https://www.ouest-france.fr/rss/une"
-    assert by_name["Libération"].url.endswith("accueil-une/?outputType=xml")
+    assert by_name["Libération"].url.endswith("/outboundfeeds/rss/?outputType=xml")
 
 
 def test_missing_url_raises(tmp_path):
@@ -35,3 +35,14 @@ def test_missing_url_raises(tmp_path):
 def test_slug():
     assert Source("La Dépêche du Midi", "PQR", "Occitanie", "u").slug == "la-depeche-du-midi"
     assert Source("Les Échos", "PQN", "National", "u").slug == "les-echos"
+
+
+def test_csv_saved_by_a_spreadsheet(tmp_path):
+    # BOM UTF-8 + fins de ligne CRLF, comme après un enregistrement depuis Excel
+    csv_path = tmp_path / "sources.csv"
+    csv_path.write_bytes(
+        "nom,type,region,acces,actif\r\nX,PQN,National,RSS https://x.fr/rss (XML),oui\r\n".encode(
+            "utf-8-sig"
+        )
+    )
+    assert load_sources(csv_path) == [Source("X", "PQN", "National", "https://x.fr/rss")]

@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3  # setup-uv ne publie pas de tag majeur (v10)
         with:
           version: "0.13.5"
       - run: uv sync --locked
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.3.3  # setup-uv ne publie pas de tag majeur (v10)
         with:
           version: "0.13.5"
       - run: uv sync --locked
