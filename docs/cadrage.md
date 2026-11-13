@@ -36,10 +36,10 @@ flowchart LR
     C[1. Collecte\nhttpx + feedparser\nETag / If-Modified-Since]
     B[(2. Stockage brut\nJSONL gzip / jour / source\ndata/raw/AAAA-MM-JJ/)]
     N[3. Nettoyage + QC\ndédoublonnage, < 24 h,\nHTML→texte, schéma pydantic]
-    P[(Base propre\nDuckDB / Parquet)]
+    P[(Base propre\nPostgreSQL)]
     T[4. Thèmes\nembeddings multilingues\n+ HDBSCAN + mots-clés\n+ petit LLM pour l'intitulé]
     L[5. Livraison\nédition HTML + JSON\nà 7 h]
-    O[Orchestrateur\nPrefect / cron 5 h 30]
+    O[Orchestrateur\nPrefect, 5 h 30]
   end
   S[6. Supervision\nlogs JSON + métriques\nPrometheus/Grafana\nalerte si pas d'édition à 7 h]
   RSS -->|XML| C -->|items bruts| B --> N -->|articles propres| P --> T -->|thèmes + articles| L
@@ -57,9 +57,9 @@ flowchart LR
 |---|---|---|---|
 | Langage | Python 3.12 | écosystème RSS + NLP, compétences de l'équipe | Node : NLP plus pauvre |
 | Collecte | httpx + feedparser | feedparser tolère les flux mal formés ; httpx gère timeouts/retry | Scrapy : surdimensionné, et on ne scrape pas les pages |
-| Ordonnancement | Prefect (ou cron en TD 2) | retries, logs et historique des runs sans la lourdeur d'Airflow | Airflow : 4-5 conteneurs pour un DAG quotidien ; cron seul : pas de retry ni d'historique |
+| Ordonnancement | Prefect (serveur auto-hébergé) | retries, logs et historique des runs sans la lourdeur d'Airflow | Airflow : 4-5 conteneurs pour un DAG quotidien ; cron seul : pas de retry ni d'historique |
 | Stockage brut | fichiers JSONL gzip partitionnés par date | rejouable, lisible, gratuit | S3/MinIO : utile plus tard, pas indispensable au début |
-| Stockage propre | DuckDB + Parquet | SQL analytique sans serveur, un seul fichier | PostgreSQL : un serveur à maintenir pour ~2 000 lignes/jour |
+| Stockage propre | PostgreSQL | Prefect a de toute façon besoin d'une base serveur : une seule instance sert les deux (bases `gazette` et `prefect`) ; accès concurrent du worker et des futurs services | DuckDB : un seul écrivain à la fois, et il faudrait quand même un Postgres pour Prefect *(choix révisé au TD 2)* |
 | Thèmes | sentence-transformers multilingue + HDBSCAN + c-TF-IDF (approche BERTopic) | fonctionne sur des titres courts, pas de nombre de thèmes à fixer | LDA : mauvais sur des textes courts ; KMeans : impose k |
 | Intitulé de thème | petit LLM local (Qwen2.5 1.5B–3B / Mistral 7B via Ollama) | nomme un groupe à partir de ses titres, sans rien résumer | API payantes : budget zéro |
 | Livraison | HTML statique (Jinja2) + JSON | aucun serveur, publiable sur GitHub Pages | appli web : hors sujet |

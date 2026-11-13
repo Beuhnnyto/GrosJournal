@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Lance l'environnement de dev : Postgres + serveur Prefect + worker.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+mkdir -p data  # créé par nous (et non par Docker en root) pour rester inscriptible
+docker compose up --build --detach --wait "$@"
+
+cat <<MSG
+
+  Prefect UI   http://localhost:${PREFECT_PORT:-4200}
+  Collecter    docker compose exec worker gazette ingest
+               (ou bouton « Run » du déploiement ingest-feeds/quotidien dans l'UI)
+  Résultats    data/raw/AAAA-MM-JJ/*.json  et  table articles :
+               docker compose exec postgres psql -U gazette -c 'select source, count(*) from articles group by 1'
+  Logs         docker compose logs -f worker
+  Arrêter      docker compose down
+MSG

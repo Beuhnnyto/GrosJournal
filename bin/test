@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Lint + tests dans le conteneur (seul Docker est requis). Mêmes vérifications que la CI.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+docker build --target test --tag gazette:test .
+docker run --rm gazette:test "$@"
